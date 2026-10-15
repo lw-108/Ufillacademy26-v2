@@ -1,5 +1,4 @@
 import { useRef } from "react"
-import { Maximize2 } from "lucide-react"
 import { gsap, MQ, useScene } from "@/lib/gsap"
 import { SectionHeading } from "@/components/SectionHeading"
 import { useRepeatingImageModal } from "@/components/RepeatingImageTransitionModal"
