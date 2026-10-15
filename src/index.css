@@ -1,0 +1,545 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "lenis/dist/lenis.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource/instrument-serif";
+
+@font-face {
+  font-family: 'NSEC';
+  src: url('/NSEC.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'League Spartan';
+  src: url('/LeagueSpartan.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Garet';
+  src: url('/garet.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Array';
+  src: url('/Array.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-nsec: 'NSEC', sans-serif;
+  --font-league: 'League Spartan', sans-serif;
+  --font-garet: 'Garet', sans-serif;
+  --font-array: 'Array', sans-serif;
+  --font-kode: 'Kode Mono', monospace;
+  --font-anton: 'Anton', sans-serif;
+
+  /* Brand palette — Atelier North warm dull-white background, black ink, one blue */
+  --color-paper: #fef0d5;
+  --color-white: #fef0d5;
+  --color-bg-dull: #fef0d5;
+  --color-beige: #fef0d5;
+  --color-ink: #0a0a0a;
+  --color-brand: #0026ff;
+  --color-brand-deep: #001fcc;
+  --color-mute: #525252;
+  --color-line: rgb(10 10 10 / 0.14);
+  --color-line-strong: #0a0a0a;
+}
+
+/* Class-based dark variant (never applied — the site is light-only). Without
+   this, Tailwind falls back to the OS setting and every `dark:text-white`
+   turns white-on-white for visitors whose system is in dark mode. */
+@custom-variant dark (&:is(.dark *));
+@custom-variant data-open (&:where([data-state="open"], [data-open]:not([data-open="false"])));
+@custom-variant data-closed (&:where([data-state="closed"], [data-closed]:not([data-closed="false"])));
+@custom-variant data-checked (&:where([data-state="checked"], [data-checked]:not([data-checked="false"])));
+@custom-variant data-unchecked (&:where([data-state="unchecked"], [data-unchecked]:not([data-unchecked="false"])));
+@custom-variant data-selected (&:where([data-selected="true"]));
+@custom-variant data-disabled (&:where([data-disabled="true"], [data-disabled]:not([data-disabled="false"])));
+@custom-variant data-active (&:where([data-state="active"], [data-active]:not([data-active="false"])));
+@custom-variant data-horizontal (&:where([data-orientation="horizontal"]));
+@custom-variant data-vertical (&:where([data-orientation="vertical"]));
+
+/* The site uses Atelier North's signature dull white / cream background (#fef0d5) */
+:root {
+    --background: #fef0d5;
+    --foreground: #0a0a0a;
+    --card: #fef0d5;
+    --card-foreground: #0a0a0a;
+    --popover: #fef0d5;
+    --popover-foreground: #0a0a0a;
+    --primary: #0a0a0a;
+    --primary-foreground: #fef0d5;
+    --secondary: #fae8c4;
+    --secondary-foreground: #0a0a0a;
+    --muted: #fae8c4;
+    --muted-foreground: #525252;
+    --accent: #fae8c4;
+    --accent-foreground: #0a0a0a;
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: rgb(10 10 10 / 0.14);
+    --input: rgb(10 10 10 / 0.2);
+    --ring: #0026ff;
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --radius: 0.25rem;
+    --sidebar: #fef0d5;
+    --sidebar-foreground: #0a0a0a;
+    --sidebar-primary: #0a0a0a;
+    --sidebar-primary-foreground: #fef0d5;
+    --sidebar-accent: #fae8c4;
+    --sidebar-accent-foreground: #0a0a0a;
+    --sidebar-border: rgb(10 10 10 / 0.14);
+    --sidebar-ring: #0026ff;
+}
+
+@theme inline {
+    --font-sans: 'Kode Mono', monospace;
+    --font-mono: 'Kode Mono', monospace;
+    --font-kode: 'Kode Mono', monospace;
+    --font-anton: 'Anton', sans-serif;
+    --font-heading: 'Anton', sans-serif;
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+  html {
+    @apply font-sans;
+    font-family: 'Kode Mono', monospace;
+    color-scheme: light;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scrollbar-gutter: auto;
+    background: #fef0d5;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    touch-action: pan-y;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Kode Mono', monospace;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    background: #fef0d5;
+    color: #0a0a0a;
+    text-rendering: optimizeLegibility;
+    touch-action: pan-y;
+  }
+  /* Fixed navbar clears in-page anchors. */
+  section[id], footer[id] {
+    scroll-margin-top: 4.5rem;
+  }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid #0026ff;
+    outline-offset: 3px;
+  }
+}
+
+.font-kode {
+  font-family: 'Kode Mono', monospace;
+  font-optical-sizing: auto;
+}
+
+.font-anton,
+.anton {
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1;
+}
+
+.font-serif,
+.font-instrument {
+  font-family: 'Instrument Serif', serif;
+}
+
+.font-nsec {
+  font-family: 'NSEC', sans-serif;
+}
+
+.font-league {
+  font-family: 'League Spartan', sans-serif;
+}
+
+.font-garet {
+  font-family: 'Garet', sans-serif;
+}
+
+.font-array {
+  font-family: 'Array', sans-serif;
+}
+
+/* Atelier small font scales */
+.text-base {
+  font-size: clamp(0.75rem, 0.706rem + 0.1878vw, 0.875rem);
+  line-height: 1.25;
+}
+
+.text-sm {
+  font-size: clamp(0.625rem, 0.581rem + 0.1878vw, 0.75rem);
+  line-height: 1.25;
+}
+
+.text-xs {
+  font-size: clamp(0.575rem, 0.535rem + 0.1878vw, 0.6875rem);
+  line-height: 1.2;
+}
+
+::selection {
+  background-color: #0026ff;
+  color: #fef0d5;
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared editorial primitives                                          */
+/* ------------------------------------------------------------------ */
+
+/* Monospace technical label matching Atelier North metadata brackets & labels */
+.label-mono {
+  font-family: 'Kode Mono', monospace;
+  font-size: clamp(0.625rem, 0.581rem + 0.1878vw, 0.75rem);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+/* Cursor-agnostic crosshair corner marks for framed imagery. */
+.crop-marks {
+  position: relative;
+}
+.crop-marks::before,
+.crop-marks::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 2;
+  border: 0 solid #0a0a0a;
+}
+.crop-marks::before {
+  top: -1px;
+  left: -1px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+.crop-marks::after {
+  right: -1px;
+  bottom: -1px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+/* SplitText line mask — leave room for descenders so glyphs aren't clipped. */
+.split-line {
+  padding-bottom: 0.08em;
+}
+
+/* Atelier North First-View list grid (.fv__lists, .fv__lists-item) */
+.fv__lists {
+  border: 1px solid #0a0a0a;
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .fv__lists {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.fv__lists-item {
+  padding: 1.25rem 1.5rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 130px;
+  background-color: transparent;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  cursor: pointer;
+}
+
+@media (min-width: 1024px) {
+  .fv__lists-item {
+    padding: 1.5rem 2rem;
+    min-height: 160px;
+  }
+}
+
+.fv__lists-item p:last-child {
+  text-align: right;
+  line-height: 0.95;
+}
+
+/* Mobile: horizontal dividers */
+.fv__lists-item:not(:last-child) {
+  border-bottom: 1px solid #0a0a0a;
+}
+
+/* Tablet & Desktop: vertical inset dividers matching Atelier North (85% height) */
+@media (min-width: 768px) {
+  .fv__lists-item:not(:last-child) {
+    border-bottom: none;
+  }
+  .fv__lists-item:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 0;
+    border-right: 1px solid #0a0a0a;
+    height: 85%;
+    pointer-events: none;
+  }
+}
+
+.fv__lists-item:hover {
+  background-color: #0026ff;
+}
+
+.fv__lists-item:hover p,
+.fv__lists-item:hover p span {
+  color: #fef0d5 !important;
+}
+
+/* Atelier North WHAT WE DO ??? floating / dancing cards */
+.p-top-about__lead {
+  border-top: 1px solid #0a0a0a;
+  border-bottom: 1px solid #0a0a0a;
+}
+
+@media (min-width: 1024px) {
+  .p-top-about__intro::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    border-right: 1px solid #0a0a0a;
+    height: 120%;
+    pointer-events: none;
+  }
+}
+
+.p-top-about__floating-inner {
+  border: 1px dashed rgba(10, 10, 10, 0.4);
+  position: relative;
+  will-change: transform;
+}
+
+/* Mobile & low-end GPU: drop expensive backdrop blurs. */
+@media (max-width: 768px) {
+  .backdrop-blur,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Completely remove browser scrollbar track and thumb across all browsers */
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+html, body {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+/* ==========================================================================
+   Codrops ConnectedGrid — Demo 2 (Exact Repo Design with Blue Accent)
+   ========================================================================== */
+.connected-grid-section {
+  --color-text: #0a0a0a;
+  --color-bg: transparent;
+  --color-link: #0026ff;
+  --color-link-hover: #001fcc;
+  --color-title: #0a0a0a;
+  --color-year: #0026ff;
+  --img-ratio: 1.5;
+}
+
+.connected-grid {
+  width: 100%;
+  grid-template-columns: 100%;
+  grid-auto-rows: auto;
+  display: grid;
+  grid-gap: 4rem;
+  position: relative;
+  margin: 4vh auto 12vh;
+}
+
+.connected-grid .grid__item {
+  position: relative;
+  margin: 0;
+}
+
+.connected-grid .grid__item-img {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--img-ratio, 1.5);
+  cursor: pointer;
+}
+
+.connected-grid .grid__item-img-inner {
+  width: 100%;
+  height: 100%;
+  background-position: 50% 50%;
+  background-size: cover;
+  position: relative;
+  will-change: transform;
+}
+
+.connected-grid .grid__item-caption {
+  position: absolute;
+  padding: 0.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  will-change: transform, opacity;
+}
+
+.connected-grid .grid__item-caption h3 {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0;
+  color: var(--color-title, #0a0a0a);
+}
+
+.connected-grid .grid__item-caption span {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-year, #0026ff);
+}
+
+@media screen and (min-width: 53em) {
+  .connected-grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
+
+  .connected-grid .grid__item {
+    grid-column: var(--c) / span var(--s);
+    grid-row: var(--r);
+  }
+}
+
+/* ==========================================================================
+   Codrops OnScrollFilter — Storm Born Image Reveal
+   ========================================================================== */
+.storm-reveal-box {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background-color: transparent !important;
+  cursor: pointer;
+}
+
+.storm-reveal-box svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: hidden;
+  background-color: transparent !important;
+}
+
+.storm-image {
+  will-change: transform;
+}
+
+
+
+
