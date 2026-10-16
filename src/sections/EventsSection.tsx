@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { Fragment, useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import {
   Calendar,
@@ -13,8 +13,7 @@ import {
   ExternalLink,
   CheckCircle2,
 } from "lucide-react"
-import { gsap, CONDITIONS, useScene } from "@/lib/gsap"
-import { useMediaQuery } from "@/lib/use-media-query"
+import { gsap, useScene } from "@/lib/gsap"
 import { lockScroll, unlockScroll } from "@/lib/scroll-lock"
 import { SectionHeading } from "@/components/SectionHeading"
 import { events, type EventItem } from "../data/events"
@@ -53,10 +52,6 @@ export function EventsSection() {
 
   const [activeEventId, setActiveEventId] = useState<string | null>(null)
   const [activeImage, setActiveImage] = useState(0)
-
-  // A pinned, scroll-driven horizontal track needs a desktop with motion
-  // allowed. Everyone else gets a native, swipeable scroll-snap row.
-  const pinned = useMediaQuery(CONDITIONS.full)
 
   const activeEvent: EventItem | null = events.find((e) => e.id === activeEventId) ?? null
 
@@ -98,10 +93,12 @@ export function EventsSection() {
     }
   }, [activeEvent, closeEvent, nextImage, prevImage])
 
+  // Scroll lock horizontal track from start to finish on mobile and all views.
+  // Normal vertical page scroll smoothly and precisely drives the horizontal track with GSAP.
   useScene(
     root,
     (mm) => {
-      mm.add(CONDITIONS.full, () => {
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
         const pin = pinRef.current
         const track = trackRef.current
         if (!pin || !track) return
@@ -115,23 +112,24 @@ export function EventsSection() {
         let cardOffsets = cards.map((card) => card.offsetLeft)
         let lastActive = -1
 
+        // Pin the section from start to finish and scroll horizontally
+        // Multiplier 1.45 gives a relaxed, smooth, and precise slow scroll
         const horizontalTween = gsap.to(track, {
           x: () => -distance(),
           ease: "none",
           scrollTrigger: {
             trigger: pin,
             start: "top top",
-            end: () => `+=${distance()}`,
+            end: () => `+=${Math.max(window.innerHeight * 2, Math.round(distance() * 1.45))}`,
             pin: true,
-            scrub: 1,
-            anticipatePin: 1,
+            scrub: 1.2,
             invalidateOnRefresh: true,
             onRefresh: () => {
               cardOffsets = cards.map((card) => card.offsetLeft)
             },
             onUpdate: (self) => {
               if (bar) gsap.set(bar, { scaleX: self.progress })
-              // Active dot = precomputed card offset nearest the viewport (zero layout thrashing)
+              // Active dot = precomputed card offset nearest viewport
               const x = self.progress * distance()
               let active = 0
               let best = Infinity
@@ -150,47 +148,17 @@ export function EventsSection() {
           },
         })
 
-        // MainEvent-style expanding image effect for event cards:
-        // First card reveals as user scrolls into the section
-        const firstCard = cards[0]
-        if (firstCard) {
-          const maskEl = firstCard.querySelector<HTMLElement>(".ev-media")
-          const innerEl = firstCard.querySelector<HTMLElement>(".ev-media-inner")
-          if (maskEl && innerEl) {
-            gsap
-              .timeline({
-                defaults: { ease: "none" },
-                scrollTrigger: {
-                  trigger: pin,
-                  start: "top bottom-=15%",
-                  end: "top top",
-                  scrub: true,
-                },
-              })
-              .fromTo(
-                maskEl,
-                { yPercent: -100, xPercent: 100 },
-                { yPercent: 0, xPercent: 0 }
-              )
-              .fromTo(
-                innerEl,
-                { yPercent: 100, xPercent: -100 },
-                { yPercent: 0, xPercent: 0 },
-                0
-              )
-          }
-        }
-
-        // Subsequent cards reveal as they slide horizontally into view
-        cards.slice(1).forEach((card, idx) => {
-          const isLeftSide = idx % 2 === 0
-          const maskEl = card.querySelector<HTMLElement>(".ev-media")
-          const innerEl = card.querySelector<HTMLElement>(".ev-media-inner")
-          if (!maskEl || !innerEl) return
-
-          gsap
-            .timeline({
-              defaults: { ease: "none" },
+        // Gentle card reveal animation - NO clipping or off-screen masking!
+        // Cards and images are ALWAYS 100% visible and beautifully rendered.
+        cards.forEach((card, idx) => {
+          if (idx === 0) return
+          gsap.fromTo(
+            card,
+            { opacity: 0.75, scale: 0.97 },
+            {
+              opacity: 1,
+              scale: 1,
+              ease: "power2.out",
               scrollTrigger: {
                 trigger: card,
                 containerAnimation: horizontalTween,
@@ -198,68 +166,12 @@ export function EventsSection() {
                 end: "center center",
                 scrub: true,
               },
-            })
-            .fromTo(
-              maskEl,
-              {
-                yPercent: -100,
-                xPercent: isLeftSide ? 100 : -100,
-              },
-              {
-                yPercent: 0,
-                xPercent: 0,
-              }
-            )
-            .fromTo(
-              innerEl,
-              {
-                yPercent: 100,
-                xPercent: isLeftSide ? -100 : 100,
-              },
-              {
-                yPercent: 0,
-                xPercent: 0,
-              },
-              0
-            )
-        })
-      })
-
-      mm.add(CONDITIONS.simple, () => {
-        const track = trackRef.current
-        if (!track) return
-        const cards = gsap.utils.toArray<HTMLElement>("[data-card]", track)
-        cards.forEach((card, idx) => {
-          const isLeftSide = idx % 2 === 0
-          const maskEl = card.querySelector<HTMLElement>(".ev-media")
-          const innerEl = card.querySelector<HTMLElement>(".ev-media-inner")
-          if (!maskEl || !innerEl) return
-
-          gsap
-            .timeline({
-              defaults: { ease: "none" },
-              scrollTrigger: {
-                trigger: card,
-                start: "top bottom-=15%",
-                end: "+=50%",
-                scrub: true,
-              },
-            })
-            .fromTo(
-              maskEl,
-              { yPercent: -100, xPercent: isLeftSide ? 100 : -100 },
-              { yPercent: 0, xPercent: 0 }
-            )
-            .fromTo(
-              innerEl,
-              { yPercent: 100, xPercent: isLeftSide ? -100 : 100 },
-              { yPercent: 0, xPercent: 0 },
-              0
-            )
+            }
+          )
         })
       })
     },
-    [pinned]
+    []
   )
 
   return (
@@ -267,44 +179,206 @@ export function EventsSection() {
       <style>{`
         @keyframes ev-fadeIn { from { opacity: 0 } to { opacity: 1 } }
 
-        /* The scroller is a size container so cards can be exactly one
-           viewport-of-the-scroller wide (cqw) — 100vw would include the
-           page scrollbar and push the last card off-centre. */
-        .ev-scroller { position: relative; container-type: inline-size; background: transparent; border-block: 1px solid #0a0a0a; }
-        .ev-scroller[data-mode="pinned"] { height: 100svh; overflow: hidden; touch-action: pan-y; }
-        .ev-scroller[data-mode="native"] { overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; }
-        .ev-scroller[data-mode="native"]::-webkit-scrollbar { display: none; }
+        .ev-scroller {
+          position: relative;
+          height: 100svh;
+          overflow: hidden;
+          touch-action: pan-y;
+          background: var(--background);
+          border-block: 1px solid #0a0a0a;
+          width: 100%;
+          z-index: 20;
+        }
 
-        .ev-track { display: flex; align-items: center; width: max-content; }
-        .ev-scroller[data-mode="pinned"] .ev-track { height: 100%; will-change: transform; }
-        .ev-scroller[data-mode="native"] .ev-track { padding: 2rem 1rem; gap: 1rem; align-items: stretch; }
+        .ev-track {
+          display: flex;
+          align-items: center;
+          height: 100%;
+          width: max-content;
+          will-change: transform;
+          padding: 0 4vw;
+          gap: 3.5vw;
+        }
 
-        .ev-card { display: flex; gap: 2rem; box-sizing: border-box; }
-        .ev-scroller[data-mode="pinned"] .ev-card { flex: 0 0 100cqw; width: 100cqw; height: 78svh; padding: 0 5cqw; }
-        .ev-scroller[data-mode="native"] .ev-card { flex: 0 0 86cqw; width: 86cqw; flex-direction: column; gap: 0; border: 1px solid #0a0a0a; scroll-snap-align: center; }
+        .ev-card {
+          display: flex;
+          box-sizing: border-box;
+          border: 1px solid #0a0a0a;
+          background: color-mix(in srgb, var(--background) 85%, transparent);
+          backdrop-filter: blur(10px);
+          overflow: hidden;
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .ev-card:hover {
+          box-shadow: 0 12px 30px rgba(10, 10, 10, 0.08);
+        }
 
-        .ev-media { position: relative; overflow: hidden; background: transparent; border: none; }
-        .ev-scroller[data-mode="pinned"] .ev-media { width: 56%; height: 100%; flex-shrink: 0; border: none; }
-        .ev-scroller[data-mode="native"] .ev-media { width: 100%; aspect-ratio: 4 / 3; border: none; }
-        .ev-media-inner { width: 100%; height: 100%; will-change: transform; display: flex; align-items: center; justify-content: center; }
-        .ev-media img { width: 100%; height: 100%; object-fit: contain; display: block; user-select: none; }
+        /* Mobile & Tablet (< 1024px): Stacked vertical card, BIG image, normal compact text */
+        @media (max-width: 1023px) {
+          .ev-card {
+            flex-direction: column;
+            flex: 0 0 min(86vw, 400px);
+            width: min(86vw, 400px);
+            height: 78svh;
+            max-height: 560px;
+            gap: 0;
+            padding: 0.75rem;
+          }
+          .ev-media {
+            width: 100%;
+            height: 60%;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+            background: rgba(10, 10, 10, 0.02);
+            border-radius: 0.25rem;
+          }
+          .ev-media-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .ev-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            user-select: none;
+          }
+          .ev-body {
+            flex: 1;
+            padding: 0.6rem 0.25rem 0.15rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 0.35rem;
+            min-height: 0;
+          }
+          .ev-title {
+            margin: 0;
+            font-family: 'Anton', sans-serif;
+            text-transform: uppercase;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+            line-height: 1.08;
+            color: #0a0a0a;
+            font-size: 1.35rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+          .ev-desc {
+            margin: 0;
+            color: #525252;
+            font-size: 0.825rem;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+        }
 
-        .ev-body { display: flex; flex-direction: column; gap: .9rem; min-width: 0; }
-        .ev-scroller[data-mode="pinned"] .ev-body { flex: 1; justify-content: center; }
-        .ev-scroller[data-mode="native"] .ev-body { padding: 1.25rem; flex: 1; }
+        /* Desktop (>= 1024px): Side-by-side card, BIG image on left, normal compact text on right */
+        @media (min-width: 1024px) {
+          .ev-card {
+            flex-direction: row;
+            flex: 0 0 min(82vw, 1100px);
+            width: min(82vw, 1100px);
+            height: 75svh;
+            max-height: 620px;
+            gap: 2rem;
+            padding: 1.5rem;
+          }
+          .ev-media {
+            width: 58%;
+            height: 100%;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+            background: rgba(10, 10, 10, 0.02);
+            border-radius: 0.375rem;
+          }
+          .ev-media-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .ev-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            user-select: none;
+          }
+          .ev-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.75rem;
+            min-width: 0;
+          }
+          .ev-title {
+            margin: 0;
+            font-family: 'Anton', sans-serif;
+            text-transform: uppercase;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+            line-height: 1.05;
+            color: #0a0a0a;
+            font-size: clamp(1.75rem, 2.4vw, 2.5rem);
+          }
+          .ev-desc {
+            margin: 0;
+            color: #525252;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+        }
 
-        .ev-title { margin: 0; font-family: 'Anton', sans-serif; text-transform: uppercase; font-weight: 400; letter-spacing: -0.01em; line-height: 0.95; color: #0a0a0a; font-size: clamp(2.25rem, 4.2vw, 4rem); }
-        .ev-scroller[data-mode="native"] .ev-title { font-size: 2rem; }
-        .ev-desc { margin: 0; color: #525252; font-size: 1rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+        .ev-deco {
+          flex: 0 0 auto;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          padding: 0 2vw;
+          font-family: 'Anton', sans-serif;
+          font-size: clamp(4rem, 9vw, 8rem);
+          line-height: .85;
+          text-transform: uppercase;
+          color: transparent;
+          -webkit-text-stroke: 1.5px #0a0a0a;
+          pointer-events: none;
+          user-select: none;
+        }
+        @media (max-width: 767px) {
+          .ev-deco { display: none; }
+        }
 
-        .ev-deco { flex: 0 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 4cqw; font-family: 'Anton', sans-serif; font-size: clamp(5rem, 13cqw, 11rem); line-height: .85; text-transform: uppercase; color: transparent; -webkit-text-stroke: 1.5px #0a0a0a; pointer-events: none; user-select: none; }
-        .ev-scroller[data-mode="native"] .ev-deco { display: none; }
-
-        .ev-dot { width: 1.5rem; height: 3px; background: rgba(10,10,10,.15); transition: background-color .3s; }
-        .ev-dot[data-active] { background: #0026ff; }
+        .ev-dot {
+          width: 1.5rem;
+          height: 3px;
+          background: rgba(10,10,10,.18);
+          transition: background-color .3s, width .3s;
+        }
+        .ev-dot[data-active] {
+          background: #0026ff;
+          width: 2.25rem;
+        }
       `}</style>
 
-      <div className="mx-auto max-w-7xl px-4 pb-12 pt-24 sm:px-6 sm:pb-16 sm:pt-32 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 pb-8 pt-20 sm:px-6 sm:pb-12 sm:pt-28 lg:px-8">
         <SectionHeading
           index="13"
           eyebrow="Special Occasion & Events"
@@ -315,17 +389,16 @@ export function EventsSection() {
           }
           lead="International Peace Day Speech Competition 2026 - Celebrating student talent, leadership, and eloquence."
         />
-        <p className="label-mono mt-8 text-mute">
-          {pinned ? "Keep scrolling to browse →" : "Swipe to browse →"}
+        <p className="label-mono mt-6 text-xs sm:text-sm text-mute">
+          Keep scrolling to browse events →
         </p>
       </div>
 
-      {/* ── Horizontal carousel ── */}
+      {/* ── Horizontal carousel: scroll-locked across all screens ── */}
       <div
         ref={pinRef}
         className="ev-scroller"
-        data-mode={pinned ? "pinned" : "native"}
-        tabIndex={pinned ? undefined : 0}
+        tabIndex={0}
         aria-label="Events carousel"
       >
         <div ref={trackRef} className="ev-track">
@@ -335,7 +408,7 @@ export function EventsSection() {
               index === 1 ? ["learn", "compete"] : index === 3 ? ["shine", "grow"] : null
 
             return (
-              <div key={event.id} style={{ display: "contents" }}>
+              <Fragment key={event.id}>
                 <article data-card className="ev-card">
                   <div className="ev-media">
                     <div className="ev-media-inner">
@@ -349,11 +422,15 @@ export function EventsSection() {
                   </div>
 
                   <div className="ev-body">
-                    <span className="label-mono text-brand">{event.tag}</span>
-                    <h3 className="ev-title">{event.title}</h3>
-                    <p className="ev-desc">{event.summary}</p>
+                    <div className="flex flex-col gap-1">
+                      <span className="label-mono text-brand text-[11px] sm:text-xs font-bold uppercase tracking-wider">
+                        {event.tag}
+                      </span>
+                      <h3 className="ev-title">{event.title}</h3>
+                      <p className="ev-desc">{event.summary}</p>
+                    </div>
 
-                    <div className="flex flex-wrap gap-x-3 gap-y-1">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {tagChips.map((t) => (
                         <span key={t} className="label-mono text-[10px] text-mute">
                           #{t.replace(/\s+/g, "")}
@@ -361,13 +438,15 @@ export function EventsSection() {
                       ))}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => openEvent(event.id)}
-                      className="label-mono mt-2 inline-flex h-12 w-max items-center bg-ink px-8 text-white transition-colors duration-300 hover:bg-brand"
-                    >
-                      Explore
-                    </button>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => openEvent(event.id)}
+                        className="label-mono inline-flex h-8 sm:h-9 items-center bg-ink px-5 sm:px-6 text-white text-[11px] sm:text-xs font-semibold uppercase tracking-wider transition-colors duration-300 hover:bg-brand active:scale-95"
+                      >
+                        Explore
+                      </button>
+                    </div>
                   </div>
                 </article>
 
@@ -377,26 +456,24 @@ export function EventsSection() {
                     <span>{decoAfter[1]}</span>
                   </div>
                 )}
-              </div>
+              </Fragment>
             )
           })}
         </div>
 
-        {pinned && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-6 z-10 flex flex-col items-center gap-3 px-8">
-            <div className="flex gap-1.5">
-              {events.map((event, i) => (
-                <span key={event.id} data-dot data-active={i === 0 ? "" : undefined} className="ev-dot" />
-              ))}
-            </div>
-            <span className="relative block h-px w-full max-w-xs bg-ink/15">
-              <span
-                data-progress
-                className="absolute inset-y-0 left-0 block h-px w-full origin-left scale-x-0 bg-ink"
-              />
-            </span>
+        <div className="pointer-events-none absolute inset-x-0 bottom-4 sm:bottom-6 z-10 flex flex-col items-center gap-2 sm:gap-2.5 px-4 sm:px-8">
+          <div className="flex gap-1.5">
+            {events.map((event, i) => (
+              <span key={event.id} data-dot data-active={i === 0 ? "" : undefined} className="ev-dot" />
+            ))}
           </div>
-        )}
+          <span className="relative block h-px w-full max-w-xs bg-ink/15">
+            <span
+              data-progress
+              className="absolute inset-y-0 left-0 block h-px w-full origin-left scale-x-0 bg-ink"
+            />
+          </span>
+        </div>
       </div>
 
       {/* ═══════════════════════════════════════════

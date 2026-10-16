@@ -171,19 +171,21 @@ export function ActivitiesSection() {
       // 3. Atelier Letter-by-Letter Sticky Title Animation
       const title = titleRef.current
       if (title) {
-        const textWrapper = title.querySelector<HTMLElement>("span")
-        if (textWrapper) {
-          const rawText = textWrapper.getAttribute("data-text") || textWrapper.textContent || ""
-          textWrapper.textContent = ""
-
+        const wordWrappers = title.querySelectorAll<HTMLElement>("[data-text]")
+        if (wordWrappers.length > 0) {
           const spans: HTMLElement[] = []
-          for (const char of rawText) {
-            const span = document.createElement("span")
-            span.className = "inline-block will-change-transform"
-            span.textContent = char === " " ? "\u00A0" : char
-            textWrapper.appendChild(span)
-            spans.push(span)
-          }
+          wordWrappers.forEach((wrapper) => {
+            const rawText = wrapper.getAttribute("data-text") || wrapper.textContent || ""
+            wrapper.textContent = ""
+
+            for (const char of rawText) {
+              const span = document.createElement("span")
+              span.className = "inline-block will-change-transform"
+              span.textContent = char === " " ? "\u00A0" : char
+              wrapper.appendChild(span)
+              spans.push(span)
+            }
+          })
 
           gsap.set(spans, { yPercent: 100 })
 
@@ -270,10 +272,13 @@ export function ActivitiesSection() {
           {/* Center Giant Anton Title */}
           <h2
             ref={titleRef}
-            className="w-full text-center font-anton leading-none tracking-tight text-[clamp(4.25rem,2.2rem+14vw,18.5rem)] text-white uppercase overflow-hidden"
+            className="w-full text-center font-anton leading-none tracking-tight text-[clamp(3.25rem,1.2rem+11vw,18.5rem)] sm:text-[clamp(4.25rem,2.2rem+14vw,18.5rem)] text-white uppercase overflow-hidden flex flex-col sm:flex-row items-center justify-center gap-y-1 sm:gap-y-0 sm:gap-x-4 md:gap-x-6"
           >
-            <span className="inline-block overflow-hidden" data-text="OUR ACTIVITIES">
-              OUR ACTIVITIES
+            <span className="inline-block overflow-hidden py-1" data-text="OUR">
+              OUR
+            </span>
+            <span className="inline-block overflow-hidden py-1" data-text="ACTIVITIES">
+              ACTIVITIES
             </span>
           </h2>
 

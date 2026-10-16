@@ -360,14 +360,14 @@ export function HandsTouchIntro({ onComplete }: HandsTouchIntroProps) {
       {/* Full-Screen Pure Radiant Light Flash Beam */}
       <div
         ref={flashRef}
-        className="pointer-events-none absolute inset-0 bg-[#fef0d5] will-change-opacity"
+        className="pointer-events-none absolute inset-0 bg-background will-change-opacity"
         style={{ opacity: 0, zIndex: 110 }}
       >
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(circle at 50% 50%, #ffffff 0%, #fef0d5 60%, rgba(219, 226, 255, 0.8) 100%)",
+              "radial-gradient(circle at 50% 50%, #ffffff 0%, var(--background, ffffff) 60%, rgba(219, 226, 255, 0.8) 100%)",
           }}
         />
       </div>
