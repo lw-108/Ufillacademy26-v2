@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactElement } from "react";
 import ContactRobotCanvas from "@/model/ContactRobot";
 import {
   ArrowRight,
@@ -111,7 +111,7 @@ const YouTubeIcon = ({ className }: IconProps) => (
   </svg>
 );
 
-const SOCIALS: { label: string; href: string; Icon: (p: IconProps) => JSX.Element }[] = [
+const SOCIALS: { label: string; href: string; Icon: (p: IconProps) => ReactElement }[] = [
   { label: "LinkedIn", href: "#", Icon: LinkedInIcon },
   { label: "Twitter (X)", href: "#", Icon: XIcon },
   { label: "Instagram", href: "#", Icon: InstagramIcon },
